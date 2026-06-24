@@ -23,3 +23,7 @@ Thumbs.db
 
 # Local Claude Code settings (personal tooling config)
 .claude/settings.local.json
+
+# MCP registry publisher binary (downloaded tool, not source)
+mcp-publisher.exe
+mcp-publisher.tar.gz
