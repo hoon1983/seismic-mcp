@@ -1,0 +1,19 @@
+[
+  {"agency": "JMA",    "bbox": [122, 24, 146, 46]},
+  {"agency": "INGV",   "bbox": [6, 35, 19, 47]},
+  {"agency": "GeoNet", "bbox": [165, -48, 180, -33]},
+  {"agency": "AFAD",   "bbox": [25, 35, 45, 43]},
+  {"agency": "IGEPN",  "bbox": [-82, -5, -75, 2]},
+  {"agency": "GA",     "bbox": [110, -45, 155, -10]},
+  {"agency": "CENC",   "bbox": [73, 18, 135, 54]},
+  {"agency": "IMO",    "bbox": [-25, 63, -13, 67]},
+  {"agency": "NOA",    "bbox": [19, 34, 30, 42]},
+  {"agency": "SED",    "bbox": [5, 45, 11, 48]},
+  {"agency": "NCEDC",  "bbox": [-125, 35, -119, 42]},
+  {"agency": "SCEDC",  "bbox": [-122, 32, -114, 37]},
+  {"agency": "BMKG",   "bbox": [95, -11, 141, 6]},
+  {"agency": "NIEP",   "bbox": [20, 43, 30, 49]},
+  {"agency": "RESIF",  "bbox": [-5, 41, 10, 51]},
+  {"agency": "KNMI",   "bbox": [3, 50, 8, 54]},
+  {"agency": "NRCAN",  "bbox": [-141, 41, -52, 84]}
+]

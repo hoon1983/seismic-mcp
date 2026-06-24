@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>seismic-mcp</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161922; --border: #262b38; --text: #e6e9f0;
+    --muted: #8a93a6; --accent: #6aa3ff; --warn: #f0a85a; --bad: #ef6e6e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .layout { display: grid; grid-template-columns: 320px 1fr; grid-template-rows: 1fr 40vh;
+    height: 100vh; gap: 1px; background: var(--border); }
+  .panel { background: var(--panel); overflow: auto; }
+  #sidebar { grid-row: 1 / 3; padding: 14px; }
+  #map { grid-column: 2; grid-row: 1; }
+  #results { grid-column: 2; grid-row: 2; }
+  h1 { font-size: 14px; margin: 0 0 12px; letter-spacing: .02em; }
+  h1 small { color: var(--muted); font-weight: 400; }
+  fieldset { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin: 0 0 10px; }
+  legend { padding: 0 4px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  label { display: block; margin-bottom: 6px; }
+  label > span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+  input, select, button {
+    width: 100%; padding: 6px 8px; background: #11141c; color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; font: inherit;
+  }
+  input:focus, select:focus { outline: 1px solid var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  select[multiple] { height: 110px; }
+  button#run { background: var(--accent); color: #0a0d14; border-color: var(--accent);
+    font-weight: 600; cursor: pointer; margin-top: 6px; }
+  button#run:hover { filter: brightness(1.08); }
+  button.linklike { background: none; border: none; color: var(--muted); width: auto;
+    padding: 2px 4px; cursor: pointer; font-size: 11px; text-decoration: underline; }
+  #status { color: var(--muted); font-size: 11px; margin-top: 6px; min-height: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--panel); color: var(--muted);
+    font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  tr.disagree td.mag { color: var(--warn); }
+  tr.selected { background: #1d2230; }
+  tr:hover { background: #1a1e29; cursor: pointer; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.agencies { color: var(--muted); font-size: 11px; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 10px;
+    background: #232838; color: var(--muted); font-size: 10px; margin-right: 3px; }
+  .pill.prime { background: #20304a; color: var(--accent); }
+  .pill.auth { background: #2c2520; color: var(--warn); }
+  a { color: var(--accent); }
+  .empty { padding: 20px; color: var(--muted); text-align: center; }
+  #map { background: #0a0d14; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: var(--panel); color: var(--text); }
+  .leaflet-popup-content a { color: var(--accent); }
+
+  /* Detail drawer */
+  #drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 999; }
+  #drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  #drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 92vw);
+    background: var(--panel); border-left: 1px solid var(--border); z-index: 1000;
+    transform: translateX(100%); transition: transform .18s ease;
+    display: flex; flex-direction: column; }
+  #drawer.open { transform: translateX(0); }
+  #drawer header { padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; }
+  #drawer header h2 { margin: 0; font-size: 13px; font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #drawer header button { width: auto; padding: 4px 8px; font-size: 11px; cursor: pointer; }
+  #drawer .body { padding: 14px 16px; overflow: auto; flex: 1; }
+  #drawer .badges { margin-bottom: 12px; }
+  #drawer .meta { color: var(--muted); font-size: 11px; margin-bottom: 12px; }
+  table.compare { width: 100%; }
+  table.compare th, table.compare td { white-space: nowrap; }
+  table.compare th.field { width: 130px; color: var(--muted); }
+  table.compare th.spread { width: 90px; text-align: right; }
+  table.compare td.spread { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  table.compare td.spread.disagree { color: var(--warn); }
+  table.compare td.val { font-variant-numeric: tabular-nums; }
+  table.compare td.val.differ { color: var(--warn); }
+  table.compare td.val.null { color: var(--muted); font-style: italic; }
+  table.compare th.agency { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+  table.compare th.agency.auth { color: var(--warn); }
+  #drawer .loading { padding: 30px; color: var(--muted); text-align: center; }
+
+  /* Agency info popover */
+  #agency-pop { position: fixed; z-index: 1100; min-width: 280px; max-width: 360px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    display: none; }
+  #agency-pop.open { display: block; }
+  #agency-pop h3 { margin: 0 0 4px; font-size: 13px; }
+  #agency-pop .full { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+  #agency-pop dl { margin: 0; display: grid; grid-template-columns: auto 1fr;
+    gap: 3px 10px; font-size: 11px; }
+  #agency-pop dt { color: var(--muted); }
+  #agency-pop dd { margin: 0; }
+  #agency-pop .notes { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text); line-height: 1.45; }
+  td.agencies .pill { cursor: pointer; }
+  td.agencies .pill:hover { filter: brightness(1.3); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside id="sidebar" class="panel">
+    <h1>seismic-mcp <small>query</small></h1>
+    <form id="form">
+      <fieldset>
+        <legend>Time (UTC)</legend>
+        <label><span>Start</span><input type="datetime-local" name="start_time"></label>
+        <label><span>End</span><input type="datetime-local" name="end_time"></label>
+        <button type="button" class="linklike" data-preset="1h">1h</button>
+        <button type="button" class="linklike" data-preset="24h">24h</button>
+        <button type="button" class="linklike" data-preset="7d">7d</button>
+        <button type="button" class="linklike" data-preset="30d">30d</button>
+      </fieldset>
+      <fieldset>
+        <legend>Magnitude</legend>
+        <div class="row">
+          <label><span>Min</span><input type="number" step="0.1" name="min_magnitude" value="4.5"></label>
+          <label><span>Max</span><input type="number" step="0.1" name="max_magnitude"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Mode</legend>
+        <label style="display:flex; gap:8px; align-items:center; margin:0;">
+          <input type="checkbox" id="discrepancies-only" style="width:auto;">
+          <span style="color:var(--text); margin:0;">Discrepancies only</span>
+        </label>
+        <div id="disc-thresholds" style="display:none; margin-top:6px;">
+          <div class="row">
+            <label><span>Min ΔM</span><input type="number" step="0.1" name="min_magnitude_spread" value="0.4"></label>
+            <label><span>Min Δkm</span><input type="number" step="1" name="min_location_spread_km" value="30"></label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Region (optional)</legend>
+        <div class="row">
+          <label><span>Min lat</span><input type="number" step="0.01" name="min_latitude"></label>
+          <label><span>Max lat</span><input type="number" step="0.01" name="max_latitude"></label>
+          <label><span>Min lon</span><input type="number" step="0.01" name="min_longitude"></label>
+          <label><span>Max lon</span><input type="number" step="0.01" name="max_longitude"></label>
+        </div>
+        <div class="row3">
+          <label><span>Center lat</span><input type="number" step="0.01" name="center_lat"></label>
+          <label><span>Center lon</span><input type="number" step="0.01" name="center_lon"></label>
+          <label><span>Radius km</span><input type="number" step="1" name="radius_km"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Agencies (blank = defaults)</legend>
+        <select multiple name="agencies" id="agencies"></select>
+      </fieldset>
+      <fieldset>
+        <legend>Limit</legend>
+        <label><input type="number" name="limit" value="50" min="1" max="500"></label>
+      </fieldset>
+      <button id="run" type="submit">Run query</button>
+      <div id="status"></div>
+    </form>
+  </aside>
+  <section id="map"></section>
+  <section id="results" class="panel">
+    <div class="empty">Run a query to see results.</div>
+  </section>
+</div>
+
+<div id="agency-pop"></div>
+<div id="drawer-backdrop"></div>
+<aside id="drawer" aria-hidden="true">
+  <header>
+    <h2 id="drawer-title">—</h2>
+    <button type="button" id="drawer-close" title="Close (Esc)">close</button>
+  </header>
+  <div class="body" id="drawer-body">
+    <div class="loading">Select an event to compare sources.</div>
+  </div>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const form = document.getElementById('form');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+const agenciesSel = document.getElementById('agencies');
+
+const map = L.map('map', { worldCopyJump: true }).setView([20, 0], 2);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap, &copy; CARTO', maxZoom: 19, subdomains: 'abcd'
+}).addTo(map);
+const markerLayer = L.layerGroup().addTo(map);
+let markersById = {};
+
+function magColor(m) {
+  if (m == null) return '#888';
+  if (m >= 7) return '#d44';
+  if (m >= 6) return '#e87';
+  if (m >= 5) return '#ec9';
+  if (m >= 4) return '#9cc';
+  return '#79a';
+}
+function magRadius(m) {
+  if (m == null) return 4;
+  return Math.max(3, Math.min(18, (m - 2) * 2.2));
+}
+
+fetch('/api/agencies').then(r => r.json()).then(list => {
+  agenciesSel.innerHTML = list.map(a =>
+    `<option value="${a}">${a}</option>`).join('');
+});
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const now = new Date();
+    const map = { '1h': 1, '24h': 24, '7d': 24*7, '30d': 24*30 };
+    const hours = map[btn.dataset.preset];
+    const start = new Date(now.getTime() - hours * 3600 * 1000);
+    form.start_time.value = toLocal(start);
+    form.end_time.value = toLocal(now);
+  });
+});
+function toLocal(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+const discToggle = document.getElementById('discrepancies-only');
+const discThresholds = document.getElementById('disc-thresholds');
+discToggle.addEventListener('change', () => {
+  discThresholds.style.display = discToggle.checked ? '' : 'none';
+});
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const params = new URLSearchParams();
+  const useDisc = discToggle.checked;
+  for (const [k, v] of fd.entries()) {
+    if (v === '' || v == null) continue;
+    // Spread thresholds only matter for /find_discrepancies.
+    if (!useDisc && (k === 'min_magnitude_spread' || k === 'min_location_spread_km')) continue;
+    if (k === 'start_time' || k === 'end_time') {
+      params.append(k, new Date(v + 'Z').toISOString());
+    } else {
+      params.append(k, v);
+    }
+  }
+  const endpoint = useDisc ? '/api/find_discrepancies' : '/api/find_events';
+  statusEl.textContent = useDisc
+    ? 'Looking for events where agencies disagree…'
+    : 'Querying agencies in parallel…';
+  resultsEl.innerHTML = '<div class="empty">Loading…</div>';
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(endpoint + '?' + params.toString());
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const events = await resp.json();
+    const ms = Math.round(performance.now() - t0);
+    const label = useDisc ? 'disagreeing events' : 'events';
+    statusEl.textContent = `${events.length} ${label} in ${ms} ms`;
+    render(events);
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    resultsEl.innerHTML = `<div class="empty">${err.message}</div>`;
+  }
+});
+
+function render(events) {
+  markerLayer.clearLayers();
+  markersById = {};
+  if (!events.length) {
+    resultsEl.innerHTML = '<div class="empty">No events.</div>';
+    return;
+  }
+
+  const rows = events.map(e => {
+    const p = e.prime_report;
+    const t = new Date(p.time_utc).toISOString().replace('T', ' ').slice(0, 19);
+    const mag = p.magnitude == null ? '' : p.magnitude.toFixed(1);
+    const magType = p.magnitude_type || '';
+    const depth = p.depth_km == null ? '' : p.depth_km.toFixed(0);
+    const ags = Object.keys(e.magnitudes_by_agency).sort();
+    const agPills = ags.map(a => {
+      const cls = a === p.agency ? 'pill prime'
+        : (a === e.local_authority_agency ? 'pill auth' : 'pill');
+      return `<span class="${cls}" data-agency="${a}" title="M${e.magnitudes_by_agency[a]} — click for info">${a}</span>`;
+    }).join('');
+    const spread = e.magnitude_spread != null ? e.magnitude_spread.toFixed(2) : '';
+    const locSpread = e.location_spread_km != null ? e.location_spread_km.toFixed(1) : '';
+    return `<tr class="${e.reports_disagree ? 'disagree' : ''}" data-id="${e.canonical_id}">
+      <td>${t}</td>
+      <td class="num mag">M${mag}<span style="color:var(--muted)">${magType}</span></td>
+      <td class="num">${depth}</td>
+      <td class="num">${p.latitude.toFixed(2)}, ${p.longitude.toFixed(2)}</td>
+      <td>${p.region_name || ''}</td>
+      <td class="agencies">${agPills}</td>
+      <td class="num">${spread}</td>
+      <td class="num">${locSpread}</td>
+      <td>${p.source_url ? `<a href="${p.source_url}" target="_blank">link</a>` : ''}</td>
+    </tr>`;
+  }).join('');
+
+  resultsEl.innerHTML = `<table>
+    <thead><tr>
+      <th>Time UTC</th><th>Mag</th><th>Depth km</th><th>Lat,Lon</th>
+      <th>Region</th><th>Agencies</th><th>ΔM</th><th>Δkm</th><th>Source</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+
+  const bounds = [];
+  events.forEach(e => {
+    const p = e.prime_report;
+    const m = L.circleMarker([p.latitude, p.longitude], {
+      radius: magRadius(p.magnitude),
+      color: magColor(p.magnitude), weight: 1.5, fillOpacity: 0.55,
+    }).addTo(markerLayer);
+    const popup = `<b>M${p.magnitude ?? '?'} ${p.magnitude_type || ''}</b><br>
+      ${new Date(p.time_utc).toISOString()}<br>
+      ${p.region_name || ''}<br>
+      Agencies: ${Object.keys(e.magnitudes_by_agency).sort().join(', ')}<br>
+      ${p.source_url ? `<a href="${p.source_url}" target="_blank">${p.agency} page</a>` : ''}`;
+    m.bindPopup(popup);
+    m.on('click', () => selectRow(e.canonical_id));
+    markersById[e.canonical_id] = m;
+    bounds.push([p.latitude, p.longitude]);
+  });
+  if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+
+  resultsEl.querySelectorAll('tr[data-id]').forEach(tr => {
+    tr.addEventListener('click', e => {
+      // Agency pills handle their own click — don't open the compare drawer.
+      if (e.target.closest('[data-agency]')) return;
+      const id = tr.dataset.id;
+      selectRow(id);
+      const m = markersById[id];
+      if (m) { map.panTo(m.getLatLng()); m.openPopup(); }
+      openDrawer(id);
+    });
+  });
+  resultsEl.querySelectorAll('[data-agency]').forEach(pill => {
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      showAgencyPopover(pill.dataset.agency, pill);
+    });
+  });
+}
+
+function selectRow(id) {
+  resultsEl.querySelectorAll('tr.selected').forEach(tr => tr.classList.remove('selected'));
+  const tr = resultsEl.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  if (tr) { tr.classList.add('selected'); tr.scrollIntoView({ block: 'nearest' }); }
+}
+
+// ---------- compare_sources drawer ----------
+const drawer = document.getElementById('drawer');
+const drawerBackdrop = document.getElementById('drawer-backdrop');
+const drawerTitle = document.getElementById('drawer-title');
+const drawerBody = document.getElementById('drawer-body');
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+drawerBackdrop.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+let drawerReq = 0;
+async function openDrawer(canonicalId) {
+  drawerTitle.textContent = canonicalId;
+  drawer.classList.add('open');
+  drawerBackdrop.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  drawerBody.innerHTML = '<div class="loading">Comparing sources…</div>';
+  const reqId = ++drawerReq;
+  try {
+    const resp = await fetch('/api/compare/' + encodeURIComponent(canonicalId));
+    if (reqId !== drawerReq) return; // stale
+    if (!resp.ok) {
+      drawerBody.innerHTML = `<div class="loading">No comparison available (${resp.status}).</div>`;
+      return;
+    }
+    const data = await resp.json();
+    renderCompare(data);
+  } catch (err) {
+    if (reqId !== drawerReq) return;
+    drawerBody.innerHTML = `<div class="loading">Error: ${err.message}</div>`;
+  }
+}
+
+function closeDrawer() {
+  drawer.classList.remove('open');
+  drawerBackdrop.classList.remove('open');
+  drawer.setAttribute('aria-hidden', 'true');
+}
+
+function renderCompare(data) {
+  const ags = data.agencies;
+  const disagreeBadge = data.reports_disagree
+    ? `<span class="pill" style="background:#3a2820;color:var(--warn)">agencies disagree</span>` : '';
+  const authBadge = data.local_authority_agency
+    ? `<span class="pill auth">local authority: ${data.local_authority_agency}</span>` : '';
+  const primeBadge = `<span class="pill prime">prime: ${data.prime_agency}</span>`;
+
+  const headerCells = ags.map(a => {
+    const cls = a === data.local_authority_agency ? 'agency auth' : 'agency';
+    return `<th class="${cls}" data-agency="${a}" style="cursor:pointer" title="Click for agency info">${a}</th>`;
+  }).join('');
+
+  const rows = data.fields.map(f => {
+    const vals = ags.map(a => {
+      const raw = f.values_by_agency[a];
+      if (raw == null) return `<td class="val null">—</td>`;
+      // Highlight cells that differ from the prime when there's a spread.
+      const primeVal = f.values_by_agency[data.prime_agency];
+      const differs = f.spread != null && f.spread > 0 && raw !== primeVal;
+      return `<td class="val ${differs ? 'differ' : ''}">${escapeHtml(formatFieldVal(f, raw))}</td>`;
+    }).join('');
+    const spreadCell = f.spread == null ? '—' : formatSpread(f);
+    const spreadDisagree = isSignificant(f);
+    return `<tr>
+      <th class="field">${f.field}</th>
+      ${vals}
+      <td class="spread ${spreadDisagree ? 'disagree' : ''}">${spreadCell}</td>
+    </tr>`;
+  }).join('');
+
+  drawerBody.innerHTML = `
+    <div class="badges">${primeBadge} ${authBadge} ${disagreeBadge}</div>
+    <div class="meta">${ags.length} ${ags.length === 1 ? 'agency reported' : 'agencies reported'} this event.</div>
+    <table class="compare">
+      <thead><tr><th class="field">Field</th>${headerCells}<th class="spread">Spread</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  drawerBody.querySelectorAll('[data-agency]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      showAgencyPopover(el.dataset.agency, el);
+    });
+  });
+}
+
+function formatFieldVal(f, raw) {
+  if (f.field === 'time_utc') return raw.replace('T', ' ').replace('+00:00', 'Z').slice(0, 23);
+  if (f.field === 'latitude' || f.field === 'longitude') return parseFloat(raw).toFixed(4);
+  if (f.field === 'depth_km') return parseFloat(raw).toFixed(1);
+  if (f.field === 'magnitude') return parseFloat(raw).toFixed(2);
+  return raw;
+}
+function formatSpread(f) {
+  if (f.spread == null) return '—';
+  if (f.field === 'time_utc') return f.spread.toFixed(2) + ' s';
+  if (f.field === 'magnitude') return 'ΔM ' + f.spread.toFixed(2);
+  if (f.field === 'latitude' || f.field === 'longitude') return f.spread.toFixed(4) + '°';
+  if (f.field === 'depth_km') return f.spread.toFixed(1) + ' km';
+  return f.spread.toFixed(2) + (f.unit ? ' ' + f.unit : '');
+}
+function isSignificant(f) {
+  if (f.spread == null) return false;
+  if (f.field === 'magnitude') return f.spread > 0.4;
+  if (f.field === 'depth_km') return f.spread > 10;
+  if (f.field === 'latitude' || f.field === 'longitude') return f.spread > 0.1;
+  if (f.field === 'time_utc') return f.spread > 5;
+  return false;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- agency info popover ----------
+const agencyPop = document.getElementById('agency-pop');
+const agencyInfoCache = new Map();
+
+async function getAgencyInfo(code) {
+  if (agencyInfoCache.has(code)) return agencyInfoCache.get(code);
+  const p = fetch('/api/agency_info/' + encodeURIComponent(code)).then(r => r.ok ? r.json() : null);
+  agencyInfoCache.set(code, p);
+  return p;
+}
+
+document.addEventListener('click', e => {
+  if (!agencyPop.classList.contains('open')) return;
+  if (e.target.closest('#agency-pop') || e.target.closest('[data-agency]')) return;
+  agencyPop.classList.remove('open');
+});
+
+async function showAgencyPopover(code, anchor) {
+  agencyPop.innerHTML = `<div style="color:var(--muted); font-size:11px;">Loading ${escapeHtml(code)}…</div>`;
+  positionPopover(anchor);
+  agencyPop.classList.add('open');
+  const info = await getAgencyInfo(code);
+  if (!info) {
+    agencyPop.innerHTML = `<h3>${escapeHtml(code)}</h3><div class="full">No metadata available.</div>`;
+    return;
+  }
+  const latencyMin = (info.typical_latency_seconds / 60);
+  const latencyTxt = latencyMin < 1 ? `${info.typical_latency_seconds}s`
+    : latencyMin < 60 ? `${latencyMin.toFixed(1)}m`
+    : `${(latencyMin / 60).toFixed(1)}h`;
+  agencyPop.innerHTML = `
+    <h3>${escapeHtml(info.code)} ${info.adapter_supported ? '<span class="pill prime" style="font-size:9px;">live</span>' : ''}</h3>
+    <div class="full">${escapeHtml(info.full_name)}</div>
+    <dl>
+      <dt>Coverage</dt><dd>${escapeHtml(info.coverage)}</dd>
+      <dt>Authority for</dt><dd>${info.is_authority_for.length ? info.is_authority_for.map(escapeHtml).join(', ') : '—'}</dd>
+      <dt>M completeness</dt><dd>${escapeHtml(info.magnitude_completeness)}</dd>
+      <dt>Typical latency</dt><dd>${latencyTxt}</dd>
+      ${info.fdsn_base_url ? `<dt>FDSN URL</dt><dd style="word-break:break-all"><a href="${info.fdsn_base_url}" target="_blank">${escapeHtml(info.fdsn_base_url)}</a></dd>` : ''}
+    </dl>
+    <div class="notes">${escapeHtml(info.notes)}</div>
+  `;
+  positionPopover(anchor);
+}
+
+function positionPopover(anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const popRect = agencyPop.getBoundingClientRect();
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  // Keep on-screen.
+  if (left + 360 > window.innerWidth) left = window.innerWidth - 380;
+  if (left < 8) left = 8;
+  if (top + (popRect.height || 200) > window.innerHeight) {
+    top = rect.top - (popRect.height || 200) - 6;
+  }
+  agencyPop.style.left = left + 'px';
+  agencyPop.style.top = top + 'px';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') agencyPop.classList.remove('open');
+});
+</script>
+</body>
+</html>

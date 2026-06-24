@@ -1,0 +1,186 @@
+{
+  "USGS": {
+    "full_name": "United States Geological Survey",
+    "coverage": "Global (best in CONUS and Alaska)",
+    "is_authority_for": ["United States (CONUS, Alaska, Hawaii, US territories)"],
+    "magnitude_completeness": "~M5.0 globally, ~M4.0 CONUS/Alaska",
+    "typical_latency_seconds": 600,
+    "notes": "Authoritative aggregator for global Mw. Global feed is NOT complete; misses many M4.5-5.5 caught by local networks."
+  },
+  "EMSC": {
+    "full_name": "European-Mediterranean Seismological Centre",
+    "coverage": "Europe and Mediterranean primary; global secondary",
+    "is_authority_for": ["Europe", "Mediterranean basin"],
+    "magnitude_completeness": "~M2.5 Europe, ~M5.5 global",
+    "typical_latency_seconds": 300,
+    "notes": "Best aggregator for European events. Maintains an event-id mapping service that cross-references USGS and other agency IDs."
+  },
+  "JMA": {
+    "full_name": "Japan Meteorological Agency",
+    "coverage": "Japan and immediately surrounding waters",
+    "is_authority_for": ["Japan"],
+    "magnitude_completeness": "~M2.0 onshore Japan",
+    "typical_latency_seconds": 90,
+    "notes": "Authoritative for Japan. Detects events globals miss. Magnitudes generally lower than USGS Mw for the same event due to different methodology."
+  },
+  "INGV": {
+    "full_name": "Istituto Nazionale di Geofisica e Vulcanologia",
+    "coverage": "Italy and surrounding Mediterranean",
+    "is_authority_for": ["Italy"],
+    "magnitude_completeness": "~M1.5 onshore Italy",
+    "typical_latency_seconds": 120,
+    "notes": "Authoritative for Italy and adjacent Mediterranean. Reports Ml primarily."
+  },
+  "GeoNet": {
+    "full_name": "GeoNet (GNS Science, New Zealand)",
+    "coverage": "New Zealand and surrounding waters",
+    "is_authority_for": ["New Zealand"],
+    "magnitude_completeness": "~M2.5 onshore NZ",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for New Zealand."
+  },
+  "AFAD": {
+    "full_name": "Disaster and Emergency Management Authority (Türkiye)",
+    "coverage": "Türkiye and surrounding region",
+    "is_authority_for": ["Türkiye"],
+    "magnitude_completeness": "~M2.5 onshore Türkiye",
+    "typical_latency_seconds": 120,
+    "notes": "Authoritative for Türkiye. Custom JSON API, not FDSN."
+  },
+  "IGEPN": {
+    "full_name": "Instituto Geofísico de la Escuela Politécnica Nacional (Ecuador)",
+    "coverage": "Ecuador",
+    "is_authority_for": ["Ecuador"],
+    "magnitude_completeness": "~M3.0 onshore Ecuador",
+    "typical_latency_seconds": 300,
+    "notes": "Authoritative for Ecuador."
+  },
+  "GA": {
+    "full_name": "Geoscience Australia",
+    "coverage": "Australia and surrounding region",
+    "is_authority_for": ["Australia"],
+    "magnitude_completeness": "~M3.0 onshore Australia",
+    "typical_latency_seconds": 300,
+    "notes": "Authoritative for Australia."
+  },
+  "CENC": {
+    "full_name": "China Earthquake Networks Center",
+    "coverage": "China",
+    "is_authority_for": ["China"],
+    "magnitude_completeness": "~M2.5 onshore China",
+    "typical_latency_seconds": 600,
+    "notes": "Authoritative for China. Limited public API; magnitudes typically Ms."
+  },
+  "IMO": {
+    "full_name": "Icelandic Meteorological Office",
+    "coverage": "Iceland",
+    "is_authority_for": ["Iceland"],
+    "magnitude_completeness": "~M1.0 onshore Iceland",
+    "typical_latency_seconds": 60,
+    "notes": "Authoritative for Iceland. Custom JSON API."
+  },
+  "NOA": {
+    "full_name": "National Observatory of Athens",
+    "coverage": "Greece and Aegean",
+    "is_authority_for": ["Greece"],
+    "magnitude_completeness": "~M2.0 onshore Greece",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for Greece."
+  },
+  "GFZ": {
+    "full_name": "GeoForschungsZentrum (Helmholtz Centre Potsdam)",
+    "coverage": "Global",
+    "is_authority_for": [],
+    "magnitude_completeness": "~M5.0 globally",
+    "typical_latency_seconds": 600,
+    "notes": "German global aggregator. Useful as a secondary global cross-check."
+  },
+  "IRIS": {
+    "full_name": "IRIS / EarthScope",
+    "coverage": "Global (federated)",
+    "is_authority_for": [],
+    "magnitude_completeness": "Depends on underlying catalog",
+    "typical_latency_seconds": 600,
+    "notes": "Federated event service; defaults to USGS PDE for recent, ISC for older."
+  },
+  "ISC": {
+    "full_name": "International Seismological Centre",
+    "coverage": "Global",
+    "is_authority_for": [],
+    "magnitude_completeness": "~M4.5 globally (reviewed)",
+    "typical_latency_seconds": 63072000,
+    "notes": "Authoritative REVIEWED bulletin, but lags by ~24 months. Use only for research-grade historical queries."
+  },
+  "SED": {
+    "full_name": "Schweizerischer Erdbebendienst (Swiss Seismological Service)",
+    "coverage": "Switzerland and surrounding Alps",
+    "is_authority_for": ["Switzerland"],
+    "magnitude_completeness": "~M1.5 onshore Switzerland",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for Switzerland. Reports Ml primarily; reviewed Mw for larger events."
+  },
+  "IPGP": {
+    "full_name": "Institut de Physique du Globe de Paris",
+    "coverage": "French overseas territories (Caribbean, Réunion, Mayotte) and global volcano observatories",
+    "is_authority_for": ["French Antilles", "Réunion", "Mayotte"],
+    "magnitude_completeness": "~M2.5 in French overseas networks",
+    "typical_latency_seconds": 300,
+    "notes": "Operates volcano observatories. Authoritative for French overseas regions outside RESIF's mainland coverage."
+  },
+  "NCEDC": {
+    "full_name": "Northern California Earthquake Data Center (UC Berkeley)",
+    "coverage": "Northern California",
+    "is_authority_for": ["Northern California"],
+    "magnitude_completeness": "~M1.5 onshore Northern California",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for events north of ~35°N in California. Co-authoritative with USGS via ANSS."
+  },
+  "SCEDC": {
+    "full_name": "Southern California Earthquake Data Center (Caltech)",
+    "coverage": "Southern California",
+    "is_authority_for": ["Southern California"],
+    "magnitude_completeness": "~M1.0 onshore Southern California (dense network)",
+    "typical_latency_seconds": 120,
+    "notes": "Authoritative for events south of ~37°N in California. Header has a 'Longtitude' typo handled by the parser."
+  },
+  "BMKG": {
+    "full_name": "Badan Meteorologi, Klimatologi, dan Geofisika (Indonesia)",
+    "coverage": "Indonesia and surrounding region",
+    "is_authority_for": ["Indonesia"],
+    "magnitude_completeness": "~M3.0 onshore Indonesia",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for Indonesia. FDSN endpoint available; magnitudes typically Mb or Mw."
+  },
+  "NIEP": {
+    "full_name": "National Institute for Earth Physics (Romania)",
+    "coverage": "Romania and surrounding region (Vrancea zone)",
+    "is_authority_for": ["Romania"],
+    "magnitude_completeness": "~M2.0 onshore Romania",
+    "typical_latency_seconds": 180,
+    "notes": "Authoritative for Romania. Key for intermediate-depth Vrancea events."
+  },
+  "RESIF": {
+    "full_name": "Réseau Sismologique et Géodésique Français (RESIF / EPOS-France)",
+    "coverage": "Metropolitan France",
+    "is_authority_for": ["France (mainland)"],
+    "magnitude_completeness": "~M2.0 mainland France",
+    "typical_latency_seconds": 240,
+    "notes": "Authoritative for mainland France. Overseas departments (IPGP / Caribbean / Réunion) are reported by IPGP."
+  },
+  "KNMI": {
+    "full_name": "Koninklijk Nederlands Meteorologisch Instituut (Royal Netherlands Meteorological Institute)",
+    "coverage": "Netherlands, Belgium, and Dutch Caribbean (Leeward Islands)",
+    "is_authority_for": ["Netherlands", "Belgium", "Aruba, Curaçao, Sint Maarten"],
+    "magnitude_completeness": "~M1.5 NL/BE; ~M3.0 Dutch Caribbean",
+    "typical_latency_seconds": 300,
+    "notes": "Monitors induced seismicity in Groningen (gas field) as well as tectonic events. Reports MLs (local) and MLbes (Leeward Islands) magnitudes."
+  },
+  "NRCAN": {
+    "full_name": "Natural Resources Canada / Earthquakes Canada",
+    "coverage": "Canada and adjacent regions (Alaska, Yukon, Cascadia, Arctic)",
+    "is_authority_for": ["Canada"],
+    "magnitude_completeness": "~M2.5 onshore Canada; ~M4.0 Arctic",
+    "typical_latency_seconds": 300,
+    "notes": "Authoritative for Canada. Flags suspected industry-induced events distinctly (MLy magnitude type). Bilingual region names (EN/FR)."
+  }
+}
