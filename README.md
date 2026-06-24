@@ -1,5 +1,7 @@
 # seismic-mcp
 
+<!-- mcp-name: io.github.hoon1983/seismic-mcp -->
+
 A unified Model Context Protocol server for global seismic data. Queries 20 seismic agencies in parallel; matches cross-agency reports of the same event; surfaces magnitude and location discrepancies so AI agents can see what one feed alone would hide.
 
 ## Status
@@ -23,9 +25,10 @@ Reports earthquake data from multiple seismic agencies for research, journalism,
 
 ### As an MCP server (Claude Desktop, VS Code, etc.)
 
+Once published to PyPI, no checkout is needed — `uvx` fetches and runs it:
+
 ```bash
-uv sync
-uv run python server.py
+uvx seismic-mcp
 ```
 
 Add to `claude_desktop_config.json` — Windows path is `%APPDATA%\Claude\claude_desktop_config.json`, macOS `~/Library/Application Support/Claude/claude_desktop_config.json`:
@@ -34,11 +37,18 @@ Add to `claude_desktop_config.json` — Windows path is `%APPDATA%\Claude\claude
 {
   "mcpServers": {
     "seismic": {
-      "command": "uv",
-      "args": ["--directory", "C:\\Users\\matt\\seismic-mcp", "run", "python", "server.py"]
+      "command": "uvx",
+      "args": ["seismic-mcp"]
     }
   }
 }
+```
+
+To run from a local checkout instead (development):
+
+```bash
+uv sync
+uv run python server.py
 ```
 
 Restart Claude Desktop. The tools appear under the seismic-mcp server in the tools menu.
