@@ -2,7 +2,7 @@
 
 <!-- mcp-name: io.github.hoon1983/seismic-mcp -->
 
-A unified Model Context Protocol server for global seismic data. Queries 20 seismic agencies in parallel; matches cross-agency reports of the same event; surfaces magnitude and location discrepancies so AI agents can see what one feed alone would hide.
+A unified Model Context Protocol server for global **earthquake** data. Queries 20 seismic agencies in parallel; matches cross-agency reports of the same earthquake; surfaces magnitude and location discrepancies so AI agents can see what one feed alone would hide.
 
 ## Status
 
